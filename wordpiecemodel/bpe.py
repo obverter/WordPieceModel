@@ -70,11 +70,11 @@ class BytePairEncoder:
             for b in range(n):
                 for e in range(b+1, min(n, b+self.max_length)+1):
                     subword = w[b:e]
-                    if not subword in self.units:
+                    if subword not in self.units:
                         continue
                     subwords.append((subword, b, e, e-b))
             return subwords
-        
+
         def longest_match(subwords):
             matched = []
             subwords = sorted(subwords, key=lambda x:(-x[3], x[1]))
@@ -88,7 +88,7 @@ class BytePairEncoder:
                 for i in reversed(removals):
                     del subwords[i]
             return sorted(matched, key=lambda x:x[1])
-        
+
         subwords = initialize(w)
         subwords = longest_match(subwords)
         subwords = ' '.join([s for s, _, _, _ in subwords])
@@ -96,10 +96,10 @@ class BytePairEncoder:
     
     def save(self, fname):
         with open(fname, 'w', encoding='utf-8') as f:
-            f.write('n_iters={}\n'.format(self.n_iters))
-            f.write('max_length={}\n'.format(self.max_length))
+            f.write(f'n_iters={self.n_iters}\n')
+            f.write(f'max_length={self.max_length}\n')
             for unit, frequency in sorted(self.units.items(), key=lambda x:(-x[1], -len(x[0]))):
-                f.write('{}\t{}\n'.format(unit, frequency))
+                f.write(f'{unit}\t{frequency}\n')
                 
     def load(self, fname):
         with open(fname, encoding='utf-8') as f:
@@ -108,12 +108,12 @@ class BytePairEncoder:
                 self.max_length = int(next(f).strip().split('=')[1])
             except Exception as e:
                 print(e)
-            
+
             self.units = {}
             for row in f:
                 try:
                     unit, frequency = row.strip().split('\t')
                     self.units[unit] = int(frequency)
                 except Exception as e:
-                    print('BPE load exception: {}'.format(str(e)))
+                    print(f'BPE load exception: {str(e)}')
                     break
